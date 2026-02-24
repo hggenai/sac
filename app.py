@@ -11,9 +11,11 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-producti
 
 # DB設定
 database_url = os.environ.get('DATABASE_URL', 'sqlite:///sales.db')
-# Supabase / Render が postgres:// を返す場合の対応
+# postgres:// → postgresql+pg8000:// に変換（Supabase/Render対応）
 if database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    database_url = database_url.replace('postgres://', 'postgresql+pg8000://', 1)
+elif database_url.startswith('postgresql://'):
+    database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
