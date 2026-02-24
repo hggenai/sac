@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}{% if professor %}教授編集{% else %}教授追加{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-bold">
+        <i class="bi bi-person me-1 text-primary"></i>
+        {% if professor %}教授情報の編集 — {{ professor.name }}{% else %}新しい教授を追加{% endif %}
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">大学 <span class="text-danger">*</span></label>
+              <select name="university_id" class="form-select" required id="univ-select">
+                <option value="">選択してください</option>
+                {% for u in universities %}
+                <option value="{{ u.id }}"
+                  {% if professor and professor.university_id == u.id %}selected
+                  {% elif request.args.get('university_id')|int == u.id %}selected{% endif %}>
+                  {{ u.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">学科</label>
+              <select name="dept_id" class="form-select" id="dept-select">
+                <option value="">なし</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}"
+                  {% if professor and professor.dept_id == d.id %}selected{% endif %}
+                  data-univ="{{ d.university_id }}">
+                  {{ d.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label fw-bold">氏名 <span class="text-danger">*</span></label>
+              <input type="text" name="name" class="form-control"
+                     value="{{ professor.name if professor else '' }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">職位</label>
+              <input type="text" name="title" class="form-control"
+                     value="{{ professor.title if professor else '' }}"
+                     placeholder="教授・准教授 等">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">メールアドレス</label>
+              <input type="email" name="email" class="form-control"
+                     value="{{ professor.email if professor else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">電話番号</label>
+              <input type="tel" name="phone" class="form-control"
+                     value="{{ professor.phone if professor else '' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">専門分野</label>
+              <input type="text" name="specialty" class="form-control"
+                     value="{{ professor.specialty if professor else '' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">写真URL</label>
+              <input type="url" name="photo_url" class="form-control"
+                     value="{{ professor.photo_url if professor else '' }}"
+                     placeholder="https://...">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">情報元URL</label>
+              <input type="url" name="source_url" class="form-control"
+                     value="{{ professor.source_url if professor else '' }}"
+                     placeholder="https://...">
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg"></i> 保存
+            </button>
+            {% if professor %}
+            <a href="{{ url_for('professor_detail', pid=professor.id) }}" class="btn btn-outline-secondary">キャンセル</a>
+            {% else %}
+            <a href="{{ url_for('professors') }}" class="btn btn-outline-secondary">キャンセル</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 大学選択に応じて学科を絞り込む
+document.getElementById('univ-select').addEventListener('change', function() {
+  const univId = this.value;
+  const deptSelect = document.getElementById('dept-select');
+  Array.from(deptSelect.options).forEach(opt => {
+    if (!opt.value) { opt.hidden = false; return; }
+    opt.hidden = opt.dataset.univ !== univId;
+  });
+  deptSelect.value = '';
+});
+</script>
+{% endblock %}

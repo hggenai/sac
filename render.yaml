@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: sales-app
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false        # Supabase の接続文字列を Render ダッシュボードで設定
+      - key: ADMIN_USERNAME
+        sync: false        # ログインユーザー名（未設定時は "admin"）
+      - key: ADMIN_PASSWORD
+        sync: false        # ログインパスワード（必須）

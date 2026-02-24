@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}{{ prof.name }}{% endblock %}
+
+{% block content %}
+{% set si = prof.sales_info %}
+
+<div class="d-flex justify-content-between align-items-start mb-4 no-print">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{{ url_for('professors') }}">教授一覧</a></li>
+      <li class="breadcrumb-item active">{{ prof.name }}</li>
+    </ol>
+  </nav>
+  <div class="btn-group btn-group-sm">
+    <a href="{{ url_for('edit_professor', pid=prof.id) }}" class="btn btn-outline-secondary">
+      <i class="bi bi-pencil"></i> 編集
+    </a>
+    <a href="{{ url_for('print_view') }}?professor_id={{ prof.id }}" target="_blank" class="btn btn-outline-secondary">
+      <i class="bi bi-printer"></i> 印刷
+    </a>
+    <form method="post" action="{{ url_for('delete_professor', pid=prof.id) }}" class="d-inline"
+          onsubmit="return confirm('「{{ prof.name }}」を削除しますか？')">
+      <button type="submit" class="btn btn-outline-danger">
+        <i class="bi bi-trash"></i>
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- 左カラム: 基本情報 -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body text-center pt-4">
+        {% if prof.photo_url %}
+        <img src="{{ prof.photo_url }}" alt="{{ prof.name }}"
+             class="rounded-circle mb-3 professor-photo-lg" onerror="this.src=''">
+        {% else %}
+        <div class="professor-photo-lg-placeholder rounded-circle bg-light d-flex align-items-center justify-content-center text-muted mx-auto mb-3">
+          <i class="bi bi-person fs-1"></i>
+        </div>
+        {% endif %}
+        <h4 class="fw-bold mb-0">{{ prof.name }}</h4>
+        {% if prof.title %}
+        <span class="badge bg-secondary mt-1">{{ prof.title }}</span>
+        {% endif %}
+        <div class="text-muted small mt-2">
+          <i class="bi bi-building me-1"></i>{{ prof.university.name }}
+          {% if prof.department %}<br>{{ prof.department.name }}{% endif %}
+        </div>
+      </div>
+      <hr class="my-0">
+      <div class="card-body">
+        <dl class="row mb-0 small">
+          {% if prof.email %}
+          <dt class="col-4 text-muted">メール</dt>
+          <dd class="col-8"><a href="mailto:{{ prof.email }}">{{ prof.email }}</a></dd>
+          {% endif %}
+          {% if prof.phone %}
+          <dt class="col-4 text-muted">電話</dt>
+          <dd class="col-8"><a href="tel:{{ prof.phone }}">{{ prof.phone }}</a></dd>
+          {% endif %}
+          {% if prof.specialty %}
+          <dt class="col-4 text-muted">専門</dt>
+          <dd class="col-8">{{ prof.specialty }}</dd>
+          {% endif %}
+          {% if prof.source_url %}
+          <dt class="col-4 text-muted">参照元</dt>
+          <dd class="col-8"><a href="{{ prof.source_url }}" target="_blank" class="text-truncate d-block">リンク</a></dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右カラム: 営業情報 + カスタムフィールド -->
+  <div class="col-md-8">
+
+    <!-- 営業情報 -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="fw-bold"><i class="bi bi-briefcase me-1 text-primary"></i>営業情報</span>
+          <span class="badge status-badge-{{ si.status | replace(' ', '') if si else '未接触' }} fs-6">
+            {{ si.status if si else '未接触' }}
+          </span>
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('update_sales', pid=prof.id) }}">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">ステータス</label>
+              <select name="status" class="form-select form-select-sm">
+                {% for s in statuses %}
+                <option value="{{ s }}" {% if si and si.status == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">最終接触日</label>
+              <input type="date" name="last_contact" class="form-control form-control-sm"
+                     value="{{ si.last_contact if si and si.last_contact else '' }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">次回予定日</label>
+              <input type="date" name="next_contact" class="form-control form-control-sm"
+                     value="{{ si.next_contact if si and si.next_contact else '' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">タグ
+                <span class="text-muted fw-normal">（カンマ区切り）</span>
+              </label>
+              <input type="text" name="tags" class="form-control form-control-sm" id="tags-input"
+                     value="{{ si.tags | join(', ') if si else '' }}"
+                     placeholder="学会, 論文著者, ...">
+              <!-- タグ候補 -->
+              <div class="mt-1">
+                {% for tag in all_tags %}
+                <button type="button" class="btn btn-outline-info btn-sm py-0 px-1 small tag-suggest">{{ tag }}</button>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">メモ</label>
+              <textarea name="memo" class="form-control form-control-sm" rows="4"
+                        placeholder="アプローチ履歴・対応内容など">{{ si.memo if si and si.memo else '' }}</textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm mt-3">
+            <i class="bi bi-check-lg"></i> 営業情報を保存
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- カスタムフィールド -->
+    {% if custom_fields %}
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-bold">
+        <i class="bi bi-sliders me-1 text-secondary"></i>カスタムフィールド
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('update_custom_fields', pid=prof.id) }}">
+          <div class="row g-3">
+            {% for cf in custom_fields %}
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ cf.name }}</label>
+              {% set val = cf_values.get(cf.id, '') %}
+              {% if cf.field_type == 'text' %}
+              <input type="text" name="cf_{{ cf.id }}" class="form-control form-control-sm" value="{{ val }}">
+              {% elif cf.field_type == 'number' %}
+              <input type="number" name="cf_{{ cf.id }}" class="form-control form-control-sm" value="{{ val }}">
+              {% elif cf.field_type == 'date' %}
+              <input type="date" name="cf_{{ cf.id }}" class="form-control form-control-sm" value="{{ val }}">
+              {% elif cf.field_type == 'select' %}
+              <select name="cf_{{ cf.id }}" class="form-select form-select-sm">
+                <option value="">---</option>
+                {% for opt in cf.options %}
+                <option value="{{ opt }}" {% if val == opt %}selected{% endif %}>{{ opt }}</option>
+                {% endfor %}
+              </select>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-secondary btn-sm mt-3">
+            <i class="bi bi-check-lg"></i> カスタムフィールドを保存
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// タグ候補クリックで入力欄に追加
+document.querySelectorAll('.tag-suggest').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const input = document.getElementById('tags-input');
+    const tag = this.textContent.trim();
+    const current = input.value.split(',').map(t => t.trim()).filter(Boolean);
+    if (!current.includes(tag)) {
+      current.push(tag);
+      input.value = current.join(', ');
+    }
+  });
+});
+</script>
+{% endblock %}

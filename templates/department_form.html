@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}学科追加{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-bold">
+        <i class="bi bi-diagram-3 me-1 text-success"></i>
+        「{{ university.name }}」に学科を追加
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label fw-bold">学科名 <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" required
+                   placeholder="例: 内科学講座">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">URL</label>
+            <input type="url" name="url" class="form-control"
+                   placeholder="https://...">
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-plus-lg"></i> 追加
+            </button>
+            <a href="{{ url_for('universities') }}" class="btn btn-outline-secondary">キャンセル</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

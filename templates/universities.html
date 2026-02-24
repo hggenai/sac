@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}大学管理{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="h4 mb-0"><i class="bi bi-building me-2 text-primary"></i>大学管理</h2>
+  <a href="{{ url_for('new_university') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg"></i> 大学を追加
+  </a>
+</div>
+
+{% if universities %}
+<div class="row g-3">
+  {% for u in universities %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ u.name }}</h5>
+        {% if u.url %}
+        <a href="{{ u.url }}" target="_blank" class="text-muted small text-truncate d-block mb-2">
+          <i class="bi bi-link-45deg"></i> {{ u.url }}
+        </a>
+        {% endif %}
+        {% if u.note %}
+        <p class="card-text small text-muted">{{ u.note }}</p>
+        {% endif %}
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <span class="badge bg-light text-dark border">教授 {{ u.professors|length }} 名</span>
+          <div class="btn-group btn-group-sm">
+            <a href="{{ url_for('professors', university_id=u.id) }}" class="btn btn-outline-primary">
+              <i class="bi bi-people"></i>
+            </a>
+            <a href="{{ url_for('edit_university', uid=u.id) }}" class="btn btn-outline-secondary">
+              <i class="bi bi-pencil"></i>
+            </a>
+            {% if u.url %}
+            <form method="post" action="{{ url_for('scrape_university', uid=u.id) }}" class="d-inline"
+                  onsubmit="return confirm('スクレイピングを実行しますか？\n（既存の教授は重複スキップされます）')">
+              <button type="submit" class="btn btn-outline-info" title="スクレイピング実行">
+                <i class="bi bi-cloud-download"></i>
+              </button>
+            </form>
+            {% endif %}
+            <a href="{{ url_for('new_department', uid=u.id) }}" class="btn btn-outline-success" title="学科追加">
+              <i class="bi bi-diagram-3"></i>
+            </a>
+            <form method="post" action="{{ url_for('delete_university', uid=u.id) }}" class="d-inline"
+                  onsubmit="return confirm('「{{ u.name }}」を削除しますか？\n関連する教授・学科もすべて削除されます。')">
+              <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {% if u.departments %}
+        <div class="mt-2 pt-2 border-top">
+          <small class="text-muted">学科:</small>
+          {% for dept in u.departments %}
+          <span class="badge bg-secondary me-1">{{ dept.name }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-building fs-1 d-block mb-3"></i>
+  <p>大学がまだ登録されていません。</p>
+  <a href="{{ url_for('new_university') }}" class="btn btn-primary">
+    <i class="bi bi-plus-lg"></i> 最初の大学を登録する
+  </a>
+</div>
+{% endif %}
+{% endblock %}

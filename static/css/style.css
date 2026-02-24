@@ -1,0 +1,81 @@
+/* ─────────────────────────────────────────
+   営業管理アプリ スタイル
+   ───────────────────────────────────────── */
+
+/* ステータスバッジ色 */
+.status-badge-未接触      { background-color: #6c757d !important; color: white; }
+.status-badge-アプローチ中 { background-color: #0dcaf0 !important; color: white; }
+.status-badge-検討中       { background-color: #ffc107 !important; color: #212529; }
+.status-badge-商談中       { background-color: #0d6efd !important; color: white; }
+.status-badge-成約         { background-color: #198754 !important; color: white; }
+.status-badge-見送り       { background-color: #dc3545 !important; color: white; }
+
+/* 教授カード ステータス左ボーダー */
+.professor-card { border-left: 4px solid #dee2e6; transition: box-shadow .15s; }
+.professor-card:hover { box-shadow: 0 .25rem .75rem rgba(0,0,0,.15) !important; }
+.professor-card.status-未接触       { border-left-color: #6c757d; }
+.professor-card.status-アプローチ中  { border-left-color: #0dcaf0; }
+.professor-card.status-検討中        { border-left-color: #ffc107; }
+.professor-card.status-商談中        { border-left-color: #0d6efd; }
+.professor-card.status-成約          { border-left-color: #198754; }
+.professor-card.status-見送り        { border-left-color: #dc3545; }
+
+/* 教授写真 */
+.professor-photo {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.professor-photo-placeholder {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+.professor-photo-lg {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+}
+.professor-photo-lg-placeholder {
+  width: 120px;
+  height: 120px;
+}
+
+/* ステータスカード */
+.status-card {
+  transition: transform .15s, box-shadow .15s;
+}
+.status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.1) !important;
+}
+
+/* min-width ユーティリティ */
+.min-w-0 { min-width: 0; }
+
+/* ナビバー */
+.navbar { box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+
+/* カード全般 */
+.card { border-radius: .5rem; }
+
+/* フォームラベル間隔 */
+.form-label { margin-bottom: .25rem; }
+
+/* ─── 印刷用 ─── */
+@media print {
+  .no-print { display: none !important; }
+  .navbar { display: none !important; }
+  main { padding: 0 !important; }
+  .card { box-shadow: none !important; border: 1px solid #dee2e6; }
+  .professor-card { page-break-inside: avoid; }
+
+  /* ステータスバッジ（印刷時も色付き） */
+  .status-badge-未接触      { background-color: #6c757d !important; -webkit-print-color-adjust: exact; }
+  .status-badge-アプローチ中 { background-color: #0dcaf0 !important; -webkit-print-color-adjust: exact; }
+  .status-badge-検討中       { background-color: #ffc107 !important; -webkit-print-color-adjust: exact; }
+  .status-badge-商談中       { background-color: #0d6efd !important; -webkit-print-color-adjust: exact; }
+  .status-badge-成約         { background-color: #198754 !important; -webkit-print-color-adjust: exact; }
+  .status-badge-見送り       { background-color: #dc3545 !important; -webkit-print-color-adjust: exact; }
+}

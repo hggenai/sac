@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>印刷 - 営業管理</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <style>
+    body { font-size: 11pt; }
+    .no-print { display: none !important; }
+    @media print {
+      .no-print { display: none !important; }
+      .page-break { page-break-after: always; }
+      body { font-size: 10pt; }
+    }
+    .print-toolbar {
+      background: #f8f9fa;
+      padding: 10px 20px;
+      border-bottom: 1px solid #dee2e6;
+      margin-bottom: 20px;
+    }
+    .professor-row td { vertical-align: middle; }
+    .status-badge { font-size: 0.75rem; white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+<!-- 印刷ツールバー -->
+<div class="print-toolbar no-print d-flex gap-3 align-items-center">
+  <strong>印刷ビュー</strong>
+
+  <form method="get" class="d-flex gap-2 align-items-center">
+    <select name="university_id" class="form-select form-select-sm" style="width:auto">
+      <option value="">すべての大学</option>
+      {% for u in universities %}
+      <option value="{{ u.id }}" {% if current_filters.university_id == u.id %}selected{% endif %}>{{ u.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="status" class="form-select form-select-sm" style="width:auto">
+      <option value="">すべてのステータス</option>
+      {% for s in statuses %}
+      <option value="{{ s }}" {% if current_filters.status == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-outline-secondary btn-sm">絞り込み</button>
+  </form>
+
+  <button onclick="window.print()" class="btn btn-primary btn-sm ms-auto">
+    <i class="bi bi-printer"></i> 印刷する
+  </button>
+  <a href="javascript:window.close()" class="btn btn-outline-secondary btn-sm">閉じる</a>
+</div>
+
+<div class="container-fluid px-4">
+  <h5 class="mb-3">
+    教授一覧
+    {% if current_filters.university_id %}
+    — {{ universities | selectattr('id', 'eq', current_filters.university_id) | map(attribute='name') | first }}
+    {% endif %}
+    （{{ professors|length }}名）
+    <span class="text-muted small">出力日: {{ now if now else '' }}</span>
+  </h5>
+
+  <table class="table table-sm table-bordered table-hover">
+    <thead class="table-light">
+      <tr>
+        <th style="width:5%">#</th>
+        <th style="width:12%">大学</th>
+        <th style="width:10%">学科</th>
+        <th style="width:8%">氏名</th>
+        <th style="width:6%">職位</th>
+        <th style="width:8%">ステータス</th>
+        <th style="width:8%">最終接触</th>
+        <th style="width:8%">次回予定</th>
+        <th style="width:12%">メール</th>
+        <th style="width:8%">専門</th>
+        {% for cf in custom_fields %}
+        <th>{{ cf.name }}</th>
+        {% endfor %}
+        <th>メモ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for prof in professors %}
+      {% set si = prof.sales_info %}
+      {% set cf_vals = {} %}
+      {% for cfv in prof.custom_field_values %}
+        {% if cf_vals.update({cfv.custom_field_id: cfv.value}) %}{% endif %}
+      {% endfor %}
+      <tr class="professor-row">
+        <td class="text-muted">{{ loop.index }}</td>
+        <td>{{ prof.university.name }}</td>
+        <td>{{ prof.department.name if prof.department else '' }}</td>
+        <td><strong>{{ prof.name }}</strong></td>
+        <td>{{ prof.title }}</td>
+        <td>
+          <span class="badge status-badge-{{ si.status | replace(' ', '') if si else '未接触' }} status-badge">
+            {{ si.status if si else '未接触' }}
+          </span>
+        </td>
+        <td>{{ si.last_contact if si and si.last_contact else '' }}</td>
+        <td>{{ si.next_contact if si and si.next_contact else '' }}</td>
+        <td class="small">{{ prof.email }}</td>
+        <td class="small">{{ prof.specialty }}</td>
+        {% for cf in custom_fields %}
+        <td class="small">{{ cf_vals.get(cf.id, '') }}</td>
+        {% endfor %}
+        <td class="small">{{ si.memo if si and si.memo else '' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  /* ステータスバッジ色 */
+  .status-badge-未接触 { background-color: #6c757d; color: white; }
+  .status-badge-アプローチ中 { background-color: #0dcaf0; color: white; }
+  .status-badge-検討中 { background-color: #ffc107; color: black; }
+  .status-badge-商談中 { background-color: #0d6efd; color: white; }
+  .status-badge-成約 { background-color: #198754; color: white; }
+  .status-badge-見送り { background-color: #dc3545; color: white; }
+</style>
+</body>
+</html>

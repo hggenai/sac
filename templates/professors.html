@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}教授一覧{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0"><i class="bi bi-people me-2 text-primary"></i>教授一覧
+    <span class="badge bg-secondary ms-2">{{ professors|length }}</span>
+  </h2>
+  <a href="{{ url_for('new_professor') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg"></i> 追加
+  </a>
+</div>
+
+<!-- フィルター -->
+<div class="card shadow-sm mb-4 no-print">
+  <div class="card-body py-2">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-6 col-md-3">
+        <label class="form-label small mb-1">大学</label>
+        <select name="university_id" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">すべて</option>
+          {% for u in universities %}
+          <option value="{{ u.id }}" {% if current_filters.university_id == u.id %}selected{% endif %}>
+            {{ u.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">学科</label>
+        <select name="dept_id" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">すべて</option>
+          {% for d in departments %}
+          <option value="{{ d.id }}" {% if current_filters.dept_id == d.id %}selected{% endif %}>
+            {{ d.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">ステータス</label>
+        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">すべて</option>
+          {% for s in statuses %}
+          <option value="{{ s }}" {% if current_filters.status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">タグ</label>
+        <select name="tag" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">すべて</option>
+          {% for t in all_tags %}
+          <option value="{{ t }}" {% if current_filters.tag == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label small mb-1">検索</label>
+        <div class="input-group input-group-sm">
+          <input type="text" name="q" class="form-control" placeholder="氏名・専門・メール"
+                 value="{{ current_filters.q }}">
+          <button type="submit" class="btn btn-outline-secondary">
+            <i class="bi bi-search"></i>
+          </button>
+          {% if current_filters.q or current_filters.status or current_filters.university_id or current_filters.tag %}
+          <a href="{{ url_for('professors') }}" class="btn btn-outline-danger">
+            <i class="bi bi-x"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 教授カード -->
+{% if professors %}
+<div class="row g-3" id="professor-cards">
+  {% for prof in professors %}
+  {% set si = prof.sales_info %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card h-100 shadow-sm professor-card status-{{ si.status if si else '未接触' }}">
+      <div class="card-body">
+        <div class="d-flex gap-3">
+          {% if prof.photo_url %}
+          <img src="{{ prof.photo_url }}" alt="{{ prof.name }}"
+               class="rounded professor-photo" onerror="this.style.display='none'">
+          {% else %}
+          <div class="professor-photo-placeholder rounded bg-light d-flex align-items-center justify-content-center text-muted">
+            <i class="bi bi-person fs-3"></i>
+          </div>
+          {% endif %}
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <a href="{{ url_for('professor_detail', pid=prof.id) }}"
+                   class="fw-bold text-decoration-none text-dark d-block">
+                  {{ prof.name }}
+                </a>
+                {% if prof.title %}
+                <span class="badge bg-light text-dark border small">{{ prof.title }}</span>
+                {% endif %}
+              </div>
+              <span class="badge status-badge-{{ si.status | replace(' ', '') if si else '未接触' }} ms-1 flex-shrink-0">
+                {{ si.status if si else '未接触' }}
+              </span>
+            </div>
+            <div class="text-muted small mt-1">
+              {{ prof.university.name }}
+              {% if prof.department %} / {{ prof.department.name }}{% endif %}
+            </div>
+            {% if prof.specialty %}
+            <div class="text-muted small text-truncate" title="{{ prof.specialty }}">
+              <i class="bi bi-mortarboard-fill me-1"></i>{{ prof.specialty }}
+            </div>
+            {% endif %}
+            {% if prof.email %}
+            <div class="small"><i class="bi bi-envelope me-1"></i>
+              <a href="mailto:{{ prof.email }}">{{ prof.email }}</a>
+            </div>
+            {% endif %}
+            {% if si and si.tags %}
+            <div class="mt-1">
+              {% for tag in si.tags %}
+              <span class="badge bg-info text-dark small">{{ tag }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% if si and si.next_contact %}
+            <div class="small text-warning mt-1">
+              <i class="bi bi-calendar-event me-1"></i>次回: {{ si.next_contact }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-people fs-1 d-block mb-3"></i>
+  <p>条件に一致する教授が見つかりません。</p>
+  <a href="{{ url_for('professors') }}" class="btn btn-outline-secondary btn-sm">フィルターをリセット</a>
+</div>
+{% endif %}
+{% endblock %}

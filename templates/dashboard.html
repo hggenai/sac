@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}ダッシュボード{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="h4 mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>ダッシュボード</h2>
+  <span class="text-muted small">教授総数: <strong>{{ total_professors }}</strong> 名</span>
+</div>
+
+<!-- ステータス別サマリー -->
+<div class="row g-3 mb-4">
+  {% set status_icons = {
+    '未接触': 'bi-circle text-secondary',
+    'アプローチ中': 'bi-send text-info',
+    '検討中': 'bi-hourglass-split text-warning',
+    '商談中': 'bi-chat-dots text-primary',
+    '成約': 'bi-check-circle-fill text-success',
+    '見送り': 'bi-x-circle text-danger'
+  } %}
+  {% for status in statuses %}
+  <div class="col-6 col-md-4 col-lg-2">
+    <a href="{{ url_for('professors', status=status) }}" class="text-decoration-none">
+      <div class="card h-100 border-0 shadow-sm status-card">
+        <div class="card-body text-center py-3">
+          <i class="bi {{ status_icons.get(status, 'bi-circle') }} fs-4"></i>
+          <div class="fw-bold fs-3 mt-1">{{ status_counts.get(status, 0) }}</div>
+          <div class="text-muted small">{{ status }}</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4">
+  <!-- 大学別件数 -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-bold">
+        <i class="bi bi-building me-1 text-primary"></i>大学別教授数
+      </div>
+      <div class="card-body p-0">
+        {% if univ_counts %}
+        <ul class="list-group list-group-flush">
+          {% for item in univ_counts %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('professors', university_id=loop.index) }}" class="text-decoration-none text-dark">
+              {{ item.name }}
+            </a>
+            <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-4">
+          <i class="bi bi-building fs-2 d-block mb-2"></i>
+          まだ大学が登録されていません。
+          <br><a href="{{ url_for('new_university') }}">大学を登録する</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 次回連絡予定 -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-bold">
+        <i class="bi bi-calendar-event me-1 text-warning"></i>次回連絡予定（直近10件）
+      </div>
+      <div class="card-body p-0">
+        {% if upcoming %}
+        <ul class="list-group list-group-flush">
+          {% for si in upcoming %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <a href="{{ url_for('professor_detail', pid=si.professor_id) }}" class="text-decoration-none fw-bold">
+                {{ si.professor.name }}
+              </a>
+              <span class="badge bg-warning text-dark">{{ si.next_contact }}</span>
+            </div>
+            <small class="text-muted">{{ si.professor.university.name }} ／ {{ si.status }}</small>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-4">
+          <i class="bi bi-calendar-check fs-2 d-block mb-2"></i>
+          予定はありません
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %}カスタムフィールド管理{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="h4 mb-0"><i class="bi bi-sliders me-2 text-primary"></i>カスタムフィールド管理</h2>
+</div>
+
+<div class="row g-4">
+  <!-- 追加フォーム -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-bold">
+        <i class="bi bi-plus-circle me-1 text-success"></i>新しいフィールドを追加
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('new_custom_field') }}">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">フィールド名 <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control form-control-sm"
+                   placeholder="例: 予算規模、契約日" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">種類</label>
+            <select name="field_type" class="form-select form-select-sm" id="field-type-select">
+              <option value="text">テキスト</option>
+              <option value="number">数値</option>
+              <option value="date">日付</option>
+              <option value="select">選択肢</option>
+            </select>
+          </div>
+          <div class="mb-3" id="options-group" style="display:none">
+            <label class="form-label small fw-bold">選択肢
+              <span class="text-muted fw-normal">（カンマ区切り）</span>
+            </label>
+            <input type="text" name="options" class="form-control form-control-sm"
+                   placeholder="選択肢A, 選択肢B, 選択肢C">
+          </div>
+          <button type="submit" class="btn btn-success btn-sm">
+            <i class="bi bi-plus-lg"></i> 追加
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- フィールド一覧 -->
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-bold">
+        <i class="bi bi-list-ul me-1"></i>登録済みフィールド
+        <span class="text-muted fw-normal small">（ドラッグで並び替え）</span>
+      </div>
+      <div class="card-body p-0">
+        {% if fields %}
+        <ul class="list-group list-group-flush" id="cf-sortable">
+          {% for cf in fields %}
+          <li class="list-group-item" data-id="{{ cf.id }}">
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted drag-handle" style="cursor:grab">
+                <i class="bi bi-grip-vertical"></i>
+              </span>
+              <div class="flex-grow-1">
+                <strong>{{ cf.name }}</strong>
+                <span class="badge bg-light text-dark border ms-1 small">
+                  {% if cf.field_type == 'text' %}テキスト
+                  {% elif cf.field_type == 'number' %}数値
+                  {% elif cf.field_type == 'date' %}日付
+                  {% elif cf.field_type == 'select' %}選択肢
+                  {% endif %}
+                </span>
+                {% if cf.options %}
+                <div class="text-muted small mt-1">
+                  選択肢: {{ cf.options | join(', ') }}
+                </div>
+                {% endif %}
+              </div>
+              <div class="d-flex gap-1">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-toggle="collapse" data-bs-target="#edit-cf-{{ cf.id }}">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <form method="post" action="{{ url_for('delete_custom_field', cfid=cf.id) }}"
+                      onsubmit="return confirm('フィールド「{{ cf.name }}」を削除しますか？\n全教授のこのフィールドのデータも削除されます。')">
+                  <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+            <!-- 編集フォーム（折りたたみ） -->
+            <div class="collapse mt-2" id="edit-cf-{{ cf.id }}">
+              <form method="post" action="{{ url_for('edit_custom_field', cfid=cf.id) }}"
+                    class="border rounded p-2 bg-light">
+                <div class="row g-2">
+                  <div class="col-md-4">
+                    <input type="text" name="name" class="form-control form-control-sm"
+                           value="{{ cf.name }}" required>
+                  </div>
+                  <div class="col-md-3">
+                    <select name="field_type" class="form-select form-select-sm">
+                      {% for t, label in [('text','テキスト'),('number','数値'),('date','日付'),('select','選択肢')] %}
+                      <option value="{{ t }}" {% if cf.field_type == t %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-5">
+                    <input type="text" name="options" class="form-control form-control-sm"
+                           value="{{ cf.options | join(', ') }}" placeholder="選択肢（カンマ区切り）">
+                  </div>
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-primary btn-sm">保存</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-sliders fs-1 d-block mb-2"></i>
+          <p>カスタムフィールドがまだありません。<br>左のフォームから追加してください。</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 選択肢フィールドの時だけオプション欄を表示
+document.getElementById('field-type-select').addEventListener('change', function() {
+  document.getElementById('options-group').style.display = this.value === 'select' ? 'block' : 'none';
+});
+
+// 並び替え（簡易ドラッグ）
+(function() {
+  const list = document.getElementById('cf-sortable');
+  if (!list) return;
+  let dragging = null;
+
+  list.querySelectorAll('li').forEach(item => {
+    item.setAttribute('draggable', true);
+    item.addEventListener('dragstart', e => {
+      dragging = item;
+      item.classList.add('opacity-50');
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('opacity-50');
+      // Save order
+      const items = Array.from(list.querySelectorAll('li'));
+      const order = items.map((el, i) => ({ id: parseInt(el.dataset.id), order: i }));
+      fetch('/custom_fields/reorder', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(order)
+      });
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      const rect = item.getBoundingClientRect();
+      const next = (e.clientY - rect.top) > rect.height / 2;
+      list.insertBefore(dragging, next ? item.nextSibling : item);
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}{% if university %}大学編集{% else %}大学追加{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-bold">
+        <i class="bi bi-building me-1 text-primary"></i>
+        {% if university %}大学情報の編集{% else %}新しい大学を追加{% endif %}
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label fw-bold">大学名 <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control"
+                   value="{{ university.name if university else '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">URL</label>
+            <input type="url" name="url" class="form-control"
+                   value="{{ university.url if university else '' }}"
+                   placeholder="https://...">
+            <div class="form-text">スクレイピング対象の教授一覧ページURLを登録します</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">メモ</label>
+            <textarea name="note" class="form-control" rows="3">{{ university.note if university else '' }}</textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg"></i> 保存
+            </button>
+            <a href="{{ url_for('universities') }}" class="btn btn-outline-secondary">キャンセル</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
